@@ -93,21 +93,18 @@ class DailySalesReportTestCase(TestCase):
         today = now.date()
         yesterday = today - timedelta(days=1)
 
-        # Crear venta para AYER
         sale_yesterday = Sale.objects.create(
             remission=self.remission,
             subtotal=Decimal("200.00"),
             tax=Decimal("20.00")
         )
 
-        # Forzar created_at (necesario si es auto_now_add=True)
         Sale.objects.filter(id=sale_yesterday.id).update(
             created_at=timezone.make_aware(
                 datetime.combine(yesterday, datetime.min.time()).replace(hour=12)
             )
         )
 
-        # Crear ventas para HOY
         Sale.objects.create(
             remission=self.remission,
             subtotal=Decimal("100.00"),
@@ -122,7 +119,6 @@ class DailySalesReportTestCase(TestCase):
             created_at=now
         )
 
-        # Request para incluir AYER y HOY
         response = self.client.get(
             f'/commerce/api/v1/reports/daily_sales/?from={yesterday.strftime("%Y-%m-%d")}&to={today.strftime("%Y-%m-%d")}'
         )
@@ -131,15 +127,12 @@ class DailySalesReportTestCase(TestCase):
 
         data = response.data
 
-        # Deben venir 2 días distintos
         self.assertEqual(len(data), 2)
 
-        # Día 1: AYER
         self.assertEqual(data[0]['sales_count'], 1)
         self.assertEqual(Decimal(str(data[0]['total_sales'])), Decimal("200.00"))
         self.assertEqual(Decimal(str(data[0]['total_tax'])), Decimal("20.00"))
 
-        # Día 2: HOY
         self.assertEqual(data[1]['sales_count'], 2)
         self.assertEqual(Decimal(str(data[1]['total_sales'])), Decimal("150.00"))
         self.assertEqual(Decimal(str(data[1]['total_tax'])), Decimal("15.00"))

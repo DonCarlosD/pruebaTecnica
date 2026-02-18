@@ -9,7 +9,6 @@ from django.db.models.functions import TruncDate
 from django.utils.dateparse import parse_date
 from django.utils import timezone
 from datetime import datetime, time
-# Create your views here.
 
 class CustomerViewSet( viewsets.ModelViewSet ):
     queryset = Customer.objects.all()
@@ -108,11 +107,9 @@ class ReportViewSet( viewsets.ViewSet ):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Convertir a datetimes timezone-aware para filtrar correctamente
         from_datetime = timezone.make_aware(datetime.combine(from_date_obj, time.min))
         to_datetime = timezone.make_aware(datetime.combine(to_date_obj, time.max))
         
-        # Filtro correcto por fecha con timezone awareness
         sales = Sale.objects.filter(
             created_at__gte=from_datetime,
             created_at__lte=to_datetime
